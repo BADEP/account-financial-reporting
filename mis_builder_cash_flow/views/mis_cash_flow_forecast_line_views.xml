@@ -2,7 +2,7 @@
 <!-- Copyright 2019 ADHOC SA
      License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl). -->
 <odoo>
-    <record model="ir.ui.view" id="mis_cash_flow_forecast_line_view_form">
+    <record id="mis_cash_flow_forecast_line_view_form" model="ir.ui.view">
         <field name="name">mis.cash_flow.forecast_line.tree</field>
         <field name="model">mis.cash_flow.forecast_line</field>
         <field name="arch" type="xml">
@@ -24,7 +24,7 @@
             </form>
         </field>
     </record>
-    <record model="ir.ui.view" id="mis_cash_flow_forecast_line_view_search">
+    <record id="mis_cash_flow_forecast_line_view_search" model="ir.ui.view">
         <field name="name">mis.cash_flow.forecast_line.search</field>
         <field name="model">mis.cash_flow.forecast_line</field>
         <field name="arch" type="xml">
@@ -68,7 +68,7 @@
             </search>
         </field>
     </record>
-    <record model="ir.ui.view" id="mis_cash_flow_forecast_line_view_tree">
+    <record id="mis_cash_flow_forecast_line_view_tree" model="ir.ui.view">
         <field name="name">mis.cash_flow.forecast_line.tree</field>
         <field name="model">mis.cash_flow.forecast_line</field>
         <field name="arch" type="xml">
@@ -86,7 +86,7 @@
             </list>
         </field>
     </record>
-    <record model="ir.actions.act_window" id="action_mis_cash_flow_forecast_line">
+    <record id="action_mis_cash_flow_forecast_line" model="ir.actions.act_window">
         <field name="name">Cash Flow Forecast Line</field>
         <field name="view_id" ref="mis_cash_flow_forecast_line_view_tree" />
         <field name="res_model">mis.cash_flow.forecast_line</field>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo noupdate="True">
     <record id="mis_cash_flow_account_office_rent" model="account.account">
         <field name="name">Office Rent</field>
