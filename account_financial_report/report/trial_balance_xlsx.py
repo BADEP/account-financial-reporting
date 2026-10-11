@@ -74,57 +74,56 @@ class TrialBalanceXslx(models.AbstractModel):
                 }
                 res = {**res, **foreign_currency}
             return res
-        else:
-            res = {
-                0: {"header": self.env._("Partner"), "field": "name", "width": 70},
-                1: {
+        res = {
+            0: {"header": self.env._("Partner"), "field": "name", "width": 70},
+            1: {
+                "header": self.env._("Initial balance"),
+                "field": "initial_balance",
+                "type": "amount",
+                "width": 14,
+            },
+            2: {
+                "header": self.env._("Debit"),
+                "field": "debit",
+                "type": "amount",
+                "width": 14,
+            },
+            3: {
+                "header": self.env._("Credit"),
+                "field": "credit",
+                "type": "amount",
+                "width": 14,
+            },
+            4: {
+                "header": self.env._("Period balance"),
+                "field": "balance",
+                "type": "amount",
+                "width": 14,
+            },
+            5: {
+                "header": self.env._("Ending balance"),
+                "field": "ending_balance",
+                "type": "amount",
+                "width": 14,
+            },
+        }
+        if report.foreign_currency:
+            foreign_currency = {
+                6: {
                     "header": self.env._("Initial balance"),
-                    "field": "initial_balance",
-                    "type": "amount",
+                    "field": "initial_currency_balance",
+                    "type": "amount_currency",
                     "width": 14,
                 },
-                2: {
-                    "header": self.env._("Debit"),
-                    "field": "debit",
-                    "type": "amount",
-                    "width": 14,
-                },
-                3: {
-                    "header": self.env._("Credit"),
-                    "field": "credit",
-                    "type": "amount",
-                    "width": 14,
-                },
-                4: {
-                    "header": self.env._("Period balance"),
-                    "field": "balance",
-                    "type": "amount",
-                    "width": 14,
-                },
-                5: {
+                7: {
                     "header": self.env._("Ending balance"),
-                    "field": "ending_balance",
-                    "type": "amount",
+                    "field": "ending_currency_balance",
+                    "type": "amount_currency",
                     "width": 14,
                 },
             }
-            if report.foreign_currency:
-                foreign_currency = {
-                    6: {
-                        "header": self.env._("Initial balance"),
-                        "field": "initial_currency_balance",
-                        "type": "amount_currency",
-                        "width": 14,
-                    },
-                    7: {
-                        "header": self.env._("Ending balance"),
-                        "field": "ending_currency_balance",
-                        "type": "amount_currency",
-                        "width": 14,
-                    },
-                }
-                res = {**res, **foreign_currency}
-            return res
+            res = {**res, **foreign_currency}
+        return res
 
     def _get_report_filters(self, report):
         return [

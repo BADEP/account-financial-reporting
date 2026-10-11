@@ -135,19 +135,13 @@ class JournalLedgerXslx(models.AbstractModel):
         return 3
 
     def _get_report_filters(self, report):
-        target_label_by_value = {
-            value: label
-            for value, label in self.env[
-                "journal.ledger.report.wizard"
-            ]._get_move_targets()
-        }
+        target_label_by_value = dict(
+            self.env["journal.ledger.report.wizard"]._get_move_targets()
+        )
 
-        sort_option_label_by_value = {
-            value: label
-            for value, label in self.env[
-                "journal.ledger.report.wizard"
-            ]._get_sort_options()
-        }
+        sort_option_label_by_value = dict(
+            self.env["journal.ledger.report.wizard"]._get_sort_options()
+        )
 
         return [
             [self.env._("Company"), report.company_id.name],
@@ -290,7 +284,6 @@ class JournalLedgerXslx(models.AbstractModel):
         report_data["row_pos"] += 2
 
     def _get_partner_name(self, partner_id, partner_data):
-        if partner_id in partner_data.keys():
+        if partner_id in partner_data:
             return partner_data[partner_id]["name"]
-        else:
-            return ""
+        return ""

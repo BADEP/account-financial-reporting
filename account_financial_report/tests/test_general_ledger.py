@@ -120,10 +120,9 @@ class TestGeneralLedgerReport(AccountTestInvoicingCommon):
             }
         )
         data = general_ledger._prepare_report_data()
-        res_data = self.env[
+        return self.env[
             "report.account_financial_report.general_ledger"
         ]._get_report_values(general_ledger, data)
-        return res_data
 
     @api.model
     def check_account_in_report(self, account_id, general_ledger):

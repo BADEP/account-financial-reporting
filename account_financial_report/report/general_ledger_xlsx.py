@@ -271,9 +271,7 @@ class GeneralLedgerXslx(models.AbstractModel):
                             "initial_credit": group_item["init_bal"]["credit"],
                             "initial_balance": group_item["init_bal"]["balance"],
                             "type": "partner",
-                            "grouped_by": account["grouped_by"]
-                            if "grouped_by" in account
-                            else "",
+                            "grouped_by": account.get("grouped_by", ""),
                             "currency_id": accounts_data[account["id"]]["currency_id"],
                             "currency_name": accounts_data[account["id"]][
                                 "currency_name"
@@ -390,7 +388,7 @@ class GeneralLedgerXslx(models.AbstractModel):
                 label = self.env._("Partner Initial balance")
             elif my_object["grouped_by"] == "taxes":
                 label = self.env._("Tax Initial balance")
-        label = label if label else self.env._("Initial balance")
+        label = label or self.env._("Initial balance")
         return super().write_initial_balance_from_dict(my_object, label, report_data)
 
     def write_ending_balance_from_dict(self, my_object, report_data):
@@ -404,7 +402,7 @@ class GeneralLedgerXslx(models.AbstractModel):
                 label = self.env._("Partner ending balance")
             elif my_object["grouped_by"] == "taxes":
                 label = self.env._("Tax ending balance")
-        label = label if label else self.env._("Ending balance")
+        label = label or self.env._("Ending balance")
         return super().write_ending_balance_from_dict(
             my_object, name, label, report_data
         )
