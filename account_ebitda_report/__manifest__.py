@@ -2,7 +2,7 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl-3.0).
 {
     "name": "EBITDA Report (MIS Builder)",
-    "version": "19.0.1.0.0",
+    "version": "20.0.1.0.0",
     "category": "Accounting/Localizations/Reporting",
     "author": "Acysos S.L., Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/account-financial-reporting",
