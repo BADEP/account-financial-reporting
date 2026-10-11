@@ -113,7 +113,7 @@ class AccountTax(models.Model):
     def get_target_type_list(self, financial_type=None):
         if financial_type == "refund":
             return ["receivable_refund", "payable_refund"]
-        elif financial_type == "regular":
+        if financial_type == "regular":
             return ["receivable", "payable", "liquidity", "other"]
         return []
 
