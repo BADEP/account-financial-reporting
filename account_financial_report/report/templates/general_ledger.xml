@@ -224,7 +224,7 @@
                 <t t-set="misc_grouped_domain" t-value="[]" t-else="" />
                 <!--## debit-->
                 <div class="act_as_cell amount">
-                    <t t-set="debit_domain" t-value="[('debit', '&lt;&gt;', 0)]" />
+                    <t t-set="debit_domain" t-value="[('debit', '!=', 0)]" />
                     <t t-if="type == 'account_type'">
                         <span
                             t-att-domain="misc_domain+debit_domain"
@@ -250,7 +250,7 @@
                 </div>
                 <!--## credit-->
                 <div class="act_as_cell amount">
-                    <t t-set="credit_domain" t-value="[('credit', '&lt;&gt;', 0)]" />
+                    <t t-set="credit_domain" t-value="[('credit', '!=', 0)]" />
                     <t t-if="type == 'account_type'">
                         <span
                             t-att-domain="misc_domain+credit_domain"

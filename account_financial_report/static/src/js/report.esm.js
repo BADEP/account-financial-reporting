@@ -1,4 +1,4 @@
-import {useComponent, useLayoutEffect} from "@web/owl2/utils";
+import {useComponent, useLayoutEffect} from "@odoo/owl";
 
 function toTitleCase(str) {
   return str
@@ -9,7 +9,7 @@ function toTitleCase(str) {
     );
 }
 
-function enrich(component, targetElement, selector, isIFrame = false) {
+export function enrich(component, targetElement, selector, isIFrame = false) {
   let doc = window.document;
   let contentDocument = targetElement;
 
@@ -67,6 +67,6 @@ export function useEnrichWithActionLinks(ref, selector = null) {
         enrich(comp, element, selector);
       }
     },
-    () => [ref.el]
+    () => [ref()]
   );
 }
