@@ -107,7 +107,7 @@ class TrialBalanceReportWizard(models.TransientModel):
     def _compute_fy_start_date(self):
         for wiz in self:
             if wiz.date_from:
-                date_from, date_to = date_utils.get_fiscal_year(
+                date_from, _date_to = date_utils.get_fiscal_year(
                     wiz.date_from,
                     day=self.company_id.fiscalyear_last_day,
                     month=int(self.company_id.fiscalyear_last_month),
@@ -162,15 +162,14 @@ class TrialBalanceReportWizard(models.TransientModel):
         }
         if not self.company_id:
             return res
-        else:
-            res["domain"]["account_ids"] += [("company_ids", "in", self.company_id.ids)]
-            res["domain"]["partner_ids"] += self._get_partner_ids_domain()
-            res["domain"]["date_range_id"] += [
-                "|",
-                ("company_id", "=", self.company_id.id),
-                ("company_id", "=", False),
-            ]
-            res["domain"]["journal_ids"] += [("company_id", "=", self.company_id.id)]
+        res["domain"]["account_ids"] += [("company_ids", "in", self.company_id.ids)]
+        res["domain"]["partner_ids"] += self._get_partner_ids_domain()
+        res["domain"]["date_range_id"] += [
+            "|",
+            ("company_id", "=", self.company_id.id),
+            ("company_id", "=", False),
+        ]
+        res["domain"]["journal_ids"] += [("company_id", "=", self.company_id.id)]
         return res
 
     @api.onchange("date_range_id")

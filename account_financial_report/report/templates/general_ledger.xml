@@ -44,15 +44,15 @@
                         <t t-set="type" t-value='"account_type"' />
                         <t
                             t-call="account_financial_report.report_general_ledger_lines"
+                            account_or_group_item_object="account"
                         >
-                            <t t-set="account_or_group_item_object" t-value="account" />
                         </t>
                         <!-- Display account footer -->
                         <t
                             t-call="account_financial_report.report_general_ledger_ending_cumul"
+                            account_or_group_item_object="account"
+                            type='"account_type"'
                         >
-                            <t t-set="account_or_group_item_object" t-value="account" />
-                            <t t-set="type" t-value='"account_type"' />
                         </t>
                     </t>
                     <t t-if="'list_grouped' in account">
@@ -67,21 +67,15 @@
                                 <!-- Display partner move lines -->
                                 <t
                                     t-call="account_financial_report.report_general_ledger_lines"
+                                    account_or_group_item_object="group_item"
                                 >
-                                    <t
-                                        t-set="account_or_group_item_object"
-                                        t-value="group_item"
-                                    />
                                 </t>
                                 <!-- Display partner footer -->
                                 <t
                                     t-call="account_financial_report.report_general_ledger_ending_cumul"
+                                    account_or_group_item_object="group_item"
+                                    type='"grouped_type"'
                                 >
-                                    <t
-                                        t-set="account_or_group_item_object"
-                                        t-value="group_item"
-                                    />
-                                    <t t-set="type" t-value='"grouped_type"' />
                                 </t>
                             </div>
                         </t>
@@ -89,12 +83,9 @@
                         <t t-if="not filter_partner_ids">
                             <t
                                 t-call="account_financial_report.report_general_ledger_ending_cumul"
+                                account_or_group_item_object="account"
+                                type='"account_type"'
                             >
-                                <t
-                                    t-set="account_or_group_item_object"
-                                    t-value="account"
-                                />
-                                <t t-set="type" t-value='"account_type"' />
                             </t>
                         </t>
                     </t>
@@ -233,7 +224,7 @@
                 <t t-set="misc_grouped_domain" t-value="[]" t-else="" />
                 <!--## debit-->
                 <div class="act_as_cell amount">
-                    <t t-set="debit_domain" t-value="[('debit', '&lt;&gt;', 0)]" />
+                    <t t-set="debit_domain" t-value="[('debit', '!=', 0)]" />
                     <t t-if="type == 'account_type'">
                         <span
                             t-att-domain="misc_domain+debit_domain"
@@ -259,7 +250,7 @@
                 </div>
                 <!--## credit-->
                 <div class="act_as_cell amount">
-                    <t t-set="credit_domain" t-value="[('credit', '&lt;&gt;', 0)]" />
+                    <t t-set="credit_domain" t-value="[('credit', '!=', 0)]" />
                     <t t-if="type == 'account_type'">
                         <span
                             t-att-domain="misc_domain+credit_domain"

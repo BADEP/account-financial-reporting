@@ -258,7 +258,7 @@ class TrialBalanceReport(models.AbstractModel):
                     )
         for tb in tb_initial_acc:
             acc_id = tb["account_id"]
-            if acc_id not in total_amount.keys():
+            if acc_id not in total_amount:
                 total_amount[acc_id] = self._prepare_total_amount(tb, foreign_currency)
                 total_amount[acc_id]["group_by_data"] = {}
                 total_amount[acc_id]["group_by_data"][0] = self._prepare_total_amount(
@@ -771,13 +771,44 @@ class TrialBalanceReport(models.AbstractModel):
         trial_balance = sorted(trial_balance, key=lambda k: k["name"])
         return trial_balance, total_amount_grouped
 
+    def _get_group_complete_code(self, account):
+        """Path of codes of the account and its parent accounts (account groups
+        were replaced by parent accounts in Odoo 20)."""
+        return " / ".join(
+            parent.code or parent.name or "" for parent in account.parent_ids
+        )
+
+    def _get_group_vals(self, group, foreign_currency):
+        vals = {
+            "id": group.id,
+            "code": group.code,
+            "name": group.name,
+            "parent_id": group.parent_id.id,
+            "type": "group_type",
+            "complete_code": self._get_group_complete_code(group),
+            "account_ids": self.env["account.account"]
+            .with_context(active_test=False)
+            .search([("id", "child_of", group.id)])
+            .ids,
+            "initial_balance": 0.0,
+            "credit": 0.0,
+            "debit": 0.0,
+            "balance": 0.0,
+            "ending_balance": 0.0,
+        }
+        if foreign_currency:
+            vals["initial_currency_balance"] = 0.0
+            vals["ending_currency_balance"] = 0.0
+        return vals
+
     def _get_hierarchy_groups(self, group_ids, groups_data, foreign_currency):
         processed_groups = []
         # Sort groups so that parent groups are processed before child groups
         groups = (
-            self.env["account.group"]
+            self.env["account.account"]
+            .with_context(active_test=False)
             .browse(group_ids)
-            .sorted(key=lambda x: x.complete_code)
+            .sorted(key=lambda x: groups_data[x.id]["complete_code"])
         )
         for group in groups:
             group_id = group.id
@@ -793,27 +824,15 @@ class TrialBalanceReport(models.AbstractModel):
             else:
                 processed_groups.append(parent_id)
             while parent_id:
-                if parent_id not in groups_data.keys():
-                    group = self.env["account.group"].browse(parent_id)
-                    groups_data[group.id] = {
-                        "id": group.id,
-                        "code": group.code_prefix_start,
-                        "name": group.name,
-                        "parent_id": group.parent_id.id,
-                        "complete_code": group.complete_code,
-                        "account_ids": group.compute_account_ids.ids,
-                        "type": "group_type",
-                        "initial_balance": 0,
-                        "debit": 0,
-                        "credit": 0,
-                        "balance": 0,
-                        "ending_balance": 0,
-                    }
-                    if foreign_currency:
-                        groups_data[group.id].update(
-                            initial_currency_balance=0,
-                            ending_currency_balance=0,
-                        )
+                if parent_id not in groups_data:
+                    parent = (
+                        self.env["account.account"]
+                        .with_context(active_test=False)
+                        .browse(parent_id)
+                    )
+                    groups_data[parent.id] = self._get_group_vals(
+                        parent, foreign_currency
+                    )
                 acc_keys = ["debit", "credit", "balance"]
                 acc_keys += ["initial_balance", "ending_balance"]
                 for acc_key in acc_keys:
@@ -838,41 +857,23 @@ class TrialBalanceReport(models.AbstractModel):
         account_group_relation = {}
         for account in accounts:
             accounts_data[account.id]["complete_code"] = (
-                account.group_id.complete_code + " / " + account.code
-                if account.group_id.id
-                else ""
+                self._get_group_complete_code(account) if account.parent_id else ""
             )
-            if account.group_id.id:
-                if account.group_id.id not in account_group_relation:
-                    account_group_relation.update({account.group_id.id: [account.id]})
+            if account.parent_id:
+                if account.parent_id.id not in account_group_relation:
+                    account_group_relation.update({account.parent_id.id: [account.id]})
                 else:
-                    account_group_relation[account.group_id.id].append(account.id)
-        groups = self.env["account.group"].browse(account_group_relation.keys())
+                    account_group_relation[account.parent_id.id].append(account.id)
+        groups = (
+            self.env["account.account"]
+            .with_context(active_test=False)
+            .browse(account_group_relation.keys())
+        )
         groups_data = {}
         for group in groups:
-            groups_data.update(
-                {
-                    group.id: {
-                        "id": group.id,
-                        "code": group.code_prefix_start,
-                        "name": group.name,
-                        "parent_id": group.parent_id.id,
-                        "type": "group_type",
-                        "complete_code": group.complete_code,
-                        "account_ids": group.compute_account_ids.ids,
-                        "initial_balance": 0.0,
-                        "credit": 0.0,
-                        "debit": 0.0,
-                        "balance": 0.0,
-                        "ending_balance": 0.0,
-                    }
-                }
-            )
-            if foreign_currency:
-                groups_data[group.id]["initial_currency_balance"] = 0.0
-                groups_data[group.id]["ending_currency_balance"] = 0.0
-        for group_id in account_group_relation:
-            for account_id in account_group_relation[group_id]:
+            groups_data[group.id] = self._get_group_vals(group, foreign_currency)
+        for group_id, group_account_ids in account_group_relation.items():
+            for account_id in group_account_ids:
                 groups_data[group_id]["initial_balance"] += total_amount[account_id][
                     "initial_balance"
                 ]
@@ -890,42 +891,25 @@ class TrialBalanceReport(models.AbstractModel):
                         account_id
                     ]["ending_currency_balance"]
         group_ids = list(groups_data.keys())
-        groups_data = self._get_hierarchy_groups(
+        return self._get_hierarchy_groups(
             group_ids,
             groups_data,
             foreign_currency,
         )
-        return groups_data
 
     def _get_computed_groups_data(self, accounts_data, total_amount, foreign_currency):
-        groups = self.env["account.group"].search([("id", "!=", False)])
+        groups = (
+            self.env["account.account"]
+            .with_context(active_test=False)
+            .search([("parent_id", "!=", False)])
+            .parent_id
+        )
         groups_data = {}
         for group in groups:
-            len_group_code = len(group.code_prefix_start)
-            groups_data.update(
-                {
-                    group.id: {
-                        "id": group.id,
-                        "code": group.code_prefix_start,
-                        "name": group.name,
-                        "parent_id": group.parent_id.id,
-                        "type": "group_type",
-                        "complete_code": group.complete_code,
-                        "account_ids": group.compute_account_ids.ids,
-                        "initial_balance": 0.0,
-                        "credit": 0.0,
-                        "debit": 0.0,
-                        "balance": 0.0,
-                        "ending_balance": 0.0,
-                    }
-                }
-            )
-            if foreign_currency:
-                groups_data[group.id]["initial_currency_balance"] = 0.0
-                groups_data[group.id]["ending_currency_balance"] = 0.0
+            groups_data[group.id] = self._get_group_vals(group, foreign_currency)
             for account in accounts_data.values():
-                if group.code_prefix_start == account["code"][:len_group_code]:
-                    acc_id = account["id"]
+                acc_id = account["id"]
+                if acc_id in groups_data[group.id]["account_ids"]:
                     group_id = group.id
                     groups_data[group_id]["initial_balance"] += total_amount[acc_id][
                         "initial_balance"
@@ -987,7 +971,7 @@ class TrialBalanceReport(models.AbstractModel):
             )
         trial_balance = []
         if not show_partner_details:
-            for account_id in accounts_data.keys():
+            for account_id in accounts_data:
                 accounts_data[account_id].update(
                     {
                         "initial_balance": total_amount[account_id]["initial_balance"],
@@ -995,15 +979,9 @@ class TrialBalanceReport(models.AbstractModel):
                         "debit": total_amount[account_id]["debit"],
                         "balance": total_amount[account_id]["balance"],
                         "ending_balance": total_amount[account_id]["ending_balance"],
-                        "group_by": (
-                            total_amount[account_id]["group_by"]
-                            if "group_by" in total_amount[account_id]
-                            else False
-                        ),
+                        "group_by": (total_amount[account_id].get("group_by", False)),
                         "group_by_data": (
-                            total_amount[account_id]["group_by_data"]
-                            if "group_by_data" in total_amount[account_id]
-                            else False
+                            total_amount[account_id].get("group_by_data", False)
                         ),
                         "type": "account_type",
                     }
@@ -1034,7 +1012,7 @@ class TrialBalanceReport(models.AbstractModel):
                 trial_balance = sorted(trial_balance, key=lambda k: k["code"])
         else:
             if foreign_currency:
-                for account_id in accounts_data.keys():
+                for account_id in accounts_data:
                     total_amount[account_id]["currency_id"] = accounts_data[account_id][
                         "currency_id"
                     ]

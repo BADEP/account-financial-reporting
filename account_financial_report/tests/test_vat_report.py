@@ -216,10 +216,9 @@ class TestVATReport(AccountTestInvoicingCommon):
             }
         )
         data = vat_report._prepare_report_data()
-        res_data = self.env[
+        return self.env[
             "report.account_financial_report.vat_report"
         ]._get_report_values(vat_report, data)
-        return res_data
 
     def check_tag_or_group_in_report(self, tag_or_group_name, vat_report):
         tag_or_group_in_report = False
@@ -363,10 +362,12 @@ class TestVATReport(AccountTestInvoicingCommon):
         )
         wizard.onchange_date_range_id()
         self.assertEqual(
-            wizard.date_from, date(date.today().year, date.today().month, 1)
+            wizard.date_from,
+            date(fields.Date.today().year, fields.Date.today().month, 1),
         )
         self.assertEqual(
-            wizard.date_to, date(date.today().year, date.today().month, 28)
+            wizard.date_to,
+            date(fields.Date.today().year, fields.Date.today().month, 28),
         )
         wizard._export("qweb-pdf")
         wizard.button_export_html()
@@ -383,10 +384,12 @@ class TestVATReport(AccountTestInvoicingCommon):
         )
         wizard.onchange_date_range_id()
         self.assertEqual(
-            wizard.date_from, date(date.today().year, date.today().month, 1)
+            wizard.date_from,
+            date(fields.Date.today().year, fields.Date.today().month, 1),
         )
         self.assertEqual(
-            wizard.date_to, date(date.today().year, date.today().month, 28)
+            wizard.date_to,
+            date(fields.Date.today().year, fields.Date.today().month, 28),
         )
         wizard._export("qweb-pdf")
         wizard.button_export_html()

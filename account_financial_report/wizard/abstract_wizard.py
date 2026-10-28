@@ -27,12 +27,12 @@ class AbstractWizard(models.AbstractModel):
             partners -= corp_partners
             partners |= corp_partners.mapped("commercial_partner_id")
             return partners.ids
+        return None
 
     company_id = fields.Many2one(
         comodel_name="res.company",
         default=lambda self: self.env.company.id,
         required=False,
-        string="Company",
     )
     label_text_limit = fields.Integer(default=40)
 

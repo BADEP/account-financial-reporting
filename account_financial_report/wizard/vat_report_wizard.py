@@ -37,12 +37,11 @@ class VATReportWizard(models.TransientModel):
         res = {"domain": {"date_range_id": []}}
         if not self.company_id:
             return res
-        else:
-            res["domain"]["date_range_id"] += [
-                "|",
-                ("company_id", "=", self.company_id.id),
-                ("company_id", "=", False),
-            ]
+        res["domain"]["date_range_id"] += [
+            "|",
+            ("company_id", "=", self.company_id.id),
+            ("company_id", "=", False),
+        ]
         return res
 
     @api.onchange("date_range_id")

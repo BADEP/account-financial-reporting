@@ -91,8 +91,7 @@ class GeneralLedgerReportWizard(models.TransientModel):
     )
 
     def _get_account_move_lines_domain(self):
-        domain = literal_eval(self.domain) if self.domain else []
-        return domain
+        return literal_eval(self.domain) if self.domain else []
 
     @api.onchange("account_code_from", "account_code_to")
     def on_change_account_range(self):
@@ -125,8 +124,7 @@ class GeneralLedgerReportWizard(models.TransientModel):
             and today.day <= last_fsc_day
         ):
             return time.strftime("%Y-01-01")
-        else:
-            return False
+        return False
 
     def _default_foreign_currency(self):
         return self.env.user.has_group("base.group_multi_currency")
@@ -135,7 +133,7 @@ class GeneralLedgerReportWizard(models.TransientModel):
     def _compute_fy_start_date(self):
         for wiz in self:
             if wiz.date_from:
-                date_from, date_to = date_utils.get_fiscal_year(
+                date_from, _date_to = date_utils.get_fiscal_year(
                     wiz.date_from,
                     day=self.company_id.fiscalyear_last_day,
                     month=int(self.company_id.fiscalyear_last_month),
@@ -195,20 +193,17 @@ class GeneralLedgerReportWizard(models.TransientModel):
         }
         if not self.company_id:
             return res
-        else:
-            res["domain"]["account_ids"] += [("company_ids", "in", self.company_id.ids)]
-            res["domain"]["account_journal_ids"] += [
-                ("company_id", "=", self.company_id.id)
-            ]
-            res["domain"]["partner_ids"] += self._get_partner_ids_domain()
-            res["domain"]["cost_center_ids"] += [
-                ("company_id", "=", self.company_id.id)
-            ]
-            res["domain"]["date_range_id"] += [
-                "|",
-                ("company_id", "=", self.company_id.id),
-                ("company_id", "=", False),
-            ]
+        res["domain"]["account_ids"] += [("company_ids", "in", self.company_id.ids)]
+        res["domain"]["account_journal_ids"] += [
+            ("company_id", "=", self.company_id.id)
+        ]
+        res["domain"]["partner_ids"] += self._get_partner_ids_domain()
+        res["domain"]["cost_center_ids"] += [("company_id", "=", self.company_id.id)]
+        res["domain"]["date_range_id"] += [
+            "|",
+            ("company_id", "=", self.company_id.id),
+            ("company_id", "=", False),
+        ]
         return res
 
     @api.onchange("date_range_id")

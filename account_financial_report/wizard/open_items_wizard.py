@@ -109,9 +109,8 @@ class OpenItemsReportWizard(models.TransientModel):
         res = {"domain": {"account_ids": [], "partner_ids": []}}
         if not self.company_id:
             return res
-        else:
-            res["domain"]["account_ids"] += [("company_ids", "in", self.company_id.ids)]
-            res["domain"]["partner_ids"] += self._get_partner_ids_domain()
+        res["domain"]["account_ids"] += [("company_ids", "in", self.company_id.ids)]
+        res["domain"]["partner_ids"] += self._get_partner_ids_domain()
         return res
 
     @api.onchange("account_ids")

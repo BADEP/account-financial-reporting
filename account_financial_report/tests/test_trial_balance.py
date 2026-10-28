@@ -26,13 +26,33 @@ class TestTrialBalanceReport(AccountTestInvoicingCommon):
                 tracking_disable=True,
             )
         )
-        # Remove previous account groups and related invoices to avoid conflicts
-        group_obj = cls.env["account.group"]
-        cls.group1 = group_obj.create({"code_prefix_start": "1", "name": "Group 1"})
-        cls.group11 = group_obj.create(
-            {"code_prefix_start": "11", "name": "Group 11", "parent_id": cls.group1.id}
+        # Account groups were replaced by (inactive) parent accounts in Odoo 20
+        group_obj = cls.env["account.account"]
+        cls.group1 = group_obj.create(
+            {
+                "code": "1",
+                "name": "Group 1",
+                "account_type": "asset_current",
+                "active": False,
+            }
         )
-        cls.group2 = group_obj.create({"code_prefix_start": "2", "name": "Group 2"})
+        cls.group11 = group_obj.create(
+            {
+                "code": "11",
+                "name": "Group 11",
+                "account_type": "asset_current",
+                "parent_id": cls.group1.id,
+                "active": False,
+            }
+        )
+        cls.group2 = group_obj.create(
+            {
+                "code": "2",
+                "name": "Group 2",
+                "account_type": "income_other",
+                "active": False,
+            }
+        )
         # Set accounts
         cls.account001 = cls._create_account_account(
             cls,
@@ -94,13 +114,14 @@ class TestTrialBalanceReport(AccountTestInvoicingCommon):
             ],
             limit=1,
         )
+        cls.account100.parent_id = cls.group1
+        (cls.account200 | cls.account201).parent_id = cls.group2
         cls.foreign_currency = cls.setup_other_currency(
             "EUR", rates=[("1900-01-01", 2.0)]
         )
 
     def _create_account_account(self, vals):
-        item = self.env["account.account"].create(vals)
-        return item
+        return self.env["account.account"].create(vals)
 
     def _add_move(
         self,
@@ -231,10 +252,9 @@ class TestTrialBalanceReport(AccountTestInvoicingCommon):
             }
         )
         data = trial_balance._prepare_report_data()
-        res_data = self.env[
+        return self.env[
             "report.account_financial_report.trial_balance"
         ]._get_report_values(trial_balance, data)
-        return res_data
 
     def check_account_in_report(self, account_id, trial_balance):
         account_in_report = False
@@ -270,34 +290,37 @@ class TestTrialBalanceReport(AccountTestInvoicingCommon):
 
     def check_partner_in_report(self, account_id, partner_id, total_amount):
         partner_in_report = False
-        if account_id in total_amount.keys():
-            if partner_id in total_amount[account_id]:
-                partner_in_report = True
+        if account_id in total_amount and partner_id in total_amount[account_id]:
+            partner_in_report = True
         return partner_in_report
 
     def _get_partner_lines(self, account_id, partner_id, total_amount):
         acc_id = account_id
         prt_id = partner_id
-        lines = {
+        return {
             "initial_balance": total_amount[acc_id][prt_id]["initial_balance"],
             "debit": total_amount[acc_id][prt_id]["debit"],
             "credit": total_amount[acc_id][prt_id]["credit"],
             "final_balance": total_amount[acc_id][prt_id]["ending_balance"],
         }
-        return lines
 
     def _sum_all_accounts(self, trial_balance, feature):
         total = 0.0
         for account in trial_balance:
             if account["type"] == "account_type":
-                for key in account.keys():
+                for key in account:
                     if key == feature:
                         total += account[key]
         return total
 
     def test_00_account_group(self):
-        self.assertTrue(self.account100 in self.group1.compute_account_ids)
-        self.assertTrue(self.account200 in self.group2.compute_account_ids)
+        accounts = self.env["account.account"].with_context(active_test=False)
+        self.assertIn(
+            self.account100, accounts.search([("id", "child_of", self.group1.id)])
+        )
+        self.assertIn(
+            self.account200, accounts.search([("id", "child_of", self.group2.id)])
+        )
 
     def test_02_account_balance_hierarchy(self):
         # Generate the general ledger line
