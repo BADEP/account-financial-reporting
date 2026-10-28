@@ -1,15 +1,13 @@
 # Copyright 2020 ForgeFlow S.L. (https://www.forgeflow.com)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-import typing
-
 from odoo import api, models
 
 
 class AgedPartnerBalanceReport(models.AbstractModel):
     _name = "report.account_financial_report.abstract_report"
     _description = "Abstract Report"
-    COMMON_ML_FIELDS: typing.ClassVar[list[str]] = [
+    COMMON_ML_FIELDS = [  # noqa: RUF012
         "account_id",
         "partner_id",
         "journal_id",
